@@ -4,7 +4,43 @@ const Tour = require("../model/tourModel");
 
 exports.getTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    //Here The filtering logic is also applied
+
+    const queryQbj = { ...req.query };
+    const excludedFields = ['page', 'limit', 'fields'];
+    excludedFields.forEach(el => delete queryQbj[el]);
+
+    //This is done to avaoid the following to be counted as the filtering parameters
+
+    // console.log(queryQbj);
+    // console.log(req.query);
+
+    //Here is the advanced filtering logic for greater than or equalto stuff
+    //The queryStr is converted to bject than in the object gte or gt or lte or lt 
+    // files are converted in the format of $gte or  $gt or $lte or $lt
+    //which can be read by the mongoDB as an parameter for filtering
+
+    let queryStr = JSON.stringify(queryQbj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+
+    // console.log(JSON.parse(queryStr));
+
+    let query = Tour.find(JSON.parse(queryStr));
+
+    //Sorting logic ascending order
+
+    if (req.query.sort) {
+      //Put minus sign for decending order
+      const sortBy = req.query.sort.split(',').join(" ");
+      console.log(sortBy)
+      // For adding secong condition use comma in it
+      query = query.sort(sortBy)
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    const tours = await query;
+
     res.status(200).json({
       status: 'sucess',
       results: tours.length,
