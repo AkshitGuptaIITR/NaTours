@@ -1,45 +1,78 @@
 const Tour = require("../model/tourModel");
 
-// const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));
+// * ! This is the miidle ware to set 5 cheap and good tours
 
-exports.getTours = async (req, res) => {
-  try {
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = 'price,-ratingAverage';
+  req.query.fields = 'name,price,ratingsAveraage,summary,difficulty';
+  next();
+}
+
+// * Creating the class for with the methods that help us to re use the code again
+
+
+// ! Error here in the query parameter
+ 
+class APIfeatures {
+  // * Constructor functions run just as soon as the class method is created
+  constructor(query, queryString) {
+    this.query = query; // * Creating query variable in the class
+    this.queryString = queryString // * Creating the queryString variable in the class
+  }
+
+  filter() {
     //Here The filtering logic is also applied
-
-    const queryQbj = { ...req.query };
+    const queryQbj = { ...this.queryString };
     const excludedFields = ['page', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryQbj[el]);
 
-    //This is done to avaoid the following to be counted as the filtering parameters
+    // let queryStr = JSON.stringify(queryQbj);
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    // console.log(queryStr)
+    this.query = this.query.find(JSON.stringify(queryQbj))
+    console.log(this.query)
+    return this;
+  }
 
-    // console.log(queryQbj);
-    // console.log(req.query);
-
-    //Here is the advanced filtering logic for greater than or equalto stuff
-    //The queryStr is converted to bject than in the object gte or gt or lte or lt 
-    // files are converted in the format of $gte or  $gt or $lte or $lt
-    //which can be read by the mongoDB as an parameter for filtering
-
-    let queryStr = JSON.stringify(queryQbj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-
-    // console.log(JSON.parse(queryStr));
-
-    let query = Tour.find(JSON.parse(queryStr));
-
-    //Sorting logic ascending order
-
-    if (req.query.sort) {
-      //Put minus sign for decending order
-      const sortBy = req.query.sort.split(',').join(" ");
-      console.log(sortBy)
-      // For adding secong condition use comma in it
-      query = query.sort(sortBy)
+  sort() {
+    if (this.queryString.sort) {
+      const sortBy = this.queryString.sort.split(',').join(" ");
+      this.query = this.query.sort(sortBy)
     } else {
-      query = query.sort('-createdAt');
+      this.query = this.query.sort('-createdAt');
     }
+    return this;
+  }
 
-    const tours = await query;
+  limitFields() {
+    if (this.queryString.fields) {
+      const fields = this.queryString.fields.split(',').join(' ');
+      this.query = this.query.select(fields);
+    } else {
+      this.query = this.query.select('-__v');
+    }
+    return this;
+  }
+
+  paginate() {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    this.query = this.query.skip(skip).limit(limit);
+
+    return this;
+  }
+}
+
+// * ! This used of the getting of the tours and pagination, sorting, limiting, searching logic applied
+
+exports.getTours = async (req, res) => {
+  try {
+    // * Execute Query 
+    const features = new APIfeatures(Tour.find(), req.query).filter().sort().limitFields().paginate();
+    const tours = await features.query;
 
     res.status(200).json({
       status: 'sucess',
@@ -51,7 +84,7 @@ exports.getTours = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: 'fail',
-      message: err
+      message: err.message
     })
   }
 };
