@@ -13,25 +13,23 @@ exports.aliasTopTours = (req, res, next) => {
 
 
 // ! Error here in the query parameter
- 
+
 class APIfeatures {
   // * Constructor functions run just as soon as the class method is created
   constructor(query, queryString) {
-    this.query = query; // * Creating query variable in the class
-    this.queryString = queryString // * Creating the queryString variable in the class
+    this.query = query;             // * Creating query variable in the class
+    this.queryString = queryString  // * Creating the queryString variable in the class
   }
 
   filter() {
-    //Here The filtering logic is also applied
+    // * Here The filtering logic is also applied
     const queryQbj = { ...this.queryString };
     const excludedFields = ['page', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryQbj[el]);
 
-    // let queryStr = JSON.stringify(queryQbj);
-    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-    // console.log(queryStr)
-    this.query = this.query.find(JSON.stringify(queryQbj))
-    console.log(this.query)
+    let queryStr = JSON.stringify(queryQbj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    this.query = this.query.find(JSON.parse(queryStr))
     return this;
   }
 
@@ -71,7 +69,7 @@ class APIfeatures {
 exports.getTours = async (req, res) => {
   try {
     // * Execute Query 
-    const features = new APIfeatures(Tour.find(), req.query).filter().sort().limitFields().paginate();
+    const features = new APIfeatures(Tour.find(), req.query).filter().sort().limitFields().paginate()
     const tours = await features.query;
 
     res.status(200).json({
