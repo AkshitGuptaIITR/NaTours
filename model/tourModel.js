@@ -8,7 +8,9 @@ const tourSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Name is required'],
     unique: true,
-    trim: true
+    trim: true,
+    maxlength: [40, 'A tour name must have less or equal 40 character'],
+    minlength: [10, 'A tour must have greater than 10 or equal to 10 characters']
   },
   duration: {
     type: Number,
@@ -20,11 +22,17 @@ const tourSchema = new mongoose.Schema({
   },
   difficulty: {
     type: String,
-    required: [true, 'It should have difficulty']
+    required: [true, 'It should have difficulty'],
+    enum: {
+      values: ['easy', 'medium', 'difficult'],
+      message: 'Difficulty must be either easy, medium or difficult'
+    }
   },
   ratingsAverage: {
     type: Number,
-    default: 4.5
+    default: 4.5,
+    min: [1, 'rating must be greater than 1'],
+    max: [5, 'rating must be below 5']
   },
   ratingsQuantity: {
     type: Number,
@@ -59,7 +67,11 @@ const tourSchema = new mongoose.Schema({
     default: Date.now()
   },
   startDates: [Date],
-  slug: String
+  slug: String,
+  secretTour: {
+    type: Boolean,
+    default: false
+  }
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
@@ -72,17 +84,40 @@ tourSchema.virtual('durationWeeks').get(function () {
 })
 
 // * Document Middleware
+
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
 // * Runs before save command
-
-// tourSchema.pre('save', function (next) {
-//   this.slug = slugify(this.name, { lower: true });
-//   next();
-// });
-
 // tourSchema.post('save', function (doc, next) {
 //   console.log(doc);
 //   next();
 // })
+
+// ? Query middleware
+// * This is the regular expression that is used to ad any function with the find
+
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+})
+
+// tourSchema.post(/^find/, function(doc, next) {
+//   console.log(doc);
+//   next();
+// })
+
+// ! Aggregation middlewares
+// * Used for running the aggregate middleware 
+
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({
+    $match: { secretTour: { $ne: true } }
+  })
+  next();
+})
 
 const Tour = mongoose.model('Tour', tourSchema);
 
