@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 //Creating the mongoDB Schema Table for your database
 
@@ -57,8 +58,31 @@ const tourSchema = new mongoose.Schema({
     select: false,
     default: Date.now()
   },
-  startDates: [Date]
+  startDates: [Date],
+  slug: String
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
+
+// * Virtual properties that don't get saved in the database
+
+tourSchema.virtual('durationWeeks').get(function () {
+  return this.duration / 7;
+})
+
+// * Document Middleware
+// * Runs before save command
+
+// tourSchema.pre('save', function (next) {
+//   this.slug = slugify(this.name, { lower: true });
+//   next();
+// });
+
+// tourSchema.post('save', function (doc, next) {
+//   console.log(doc);
+//   next();
+// })
 
 const Tour = mongoose.model('Tour', tourSchema);
 

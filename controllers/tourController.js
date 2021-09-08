@@ -38,7 +38,7 @@ exports.getTours = async (req, res) => {
 };
 
 exports.createTour = async (req, res) => {
-  //This is the another way of doing the save of the object
+  // * This is the another way of doing the save of the object
 
   try {
     const newTour = await Tour.create(req.body);
@@ -51,7 +51,7 @@ exports.createTour = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: 'fail',
-      message: 'Invalid data send'
+      message: err
     })
   }
   //This is the one way to do
