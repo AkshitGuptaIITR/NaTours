@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 // const fs = require('fs')
-dotenv.config({path:'./config.env'});
+dotenv.config({ path: './config.env' });
 
 const app = express();
 console.log(process.env.NODE_ENV)
@@ -46,7 +46,17 @@ app.use(express.static(`${__dirname}/public`));
 //Creating different router
 //These are middlewares
 app.use('/api/v1/tours', tourRouter);
-app.use('/api/v1/users', userRouter)
+app.use('/api/v1/users', userRouter);
+
+// * This is the error handler that helps to send a response on unhandled routes
+
+app.all('*', (req, res, next) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Can't find ${req.originalUrl} on this server!`
+  });
+  next();
+})
 
 module.exports = app;
 

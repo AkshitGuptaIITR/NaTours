@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const validator = require('validator');
 
 //Creating the mongoDB Schema Table for your database
 
@@ -10,7 +11,9 @@ const tourSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     maxlength: [40, 'A tour name must have less or equal 40 character'],
-    minlength: [10, 'A tour must have greater than 10 or equal to 10 characters']
+    minlength: [10, 'A tour must have greater than 10 or equal to 10 characters'],
+    // validate: [validator.isAlpha, 'Enter only alphabets as names']
+
   },
   duration: {
     type: Number,
@@ -42,8 +45,20 @@ const tourSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Price is required']
   },
+
+  // * using custom validator
+
   priceDiscount: {
-    type: Number
+    type: Number,
+    validate:
+    {
+      validator:
+        function (val) {
+          return val < this.price
+          // ! This will check that the price is greater than priceDiscount or not and return true or false which will then trigger validation error 
+        },
+      message: 'Price discount ({VALUE}) must be less than the price',
+    }
   },
   summary: {
     type: String,
