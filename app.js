@@ -51,10 +51,28 @@ app.use('/api/v1/users', userRouter);
 // * This is the error handler that helps to send a response on unhandled routes
 
 app.all('*', (req, res, next) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Can't find ${req.originalUrl} on this server!`
+  // res.status(404).json({
+  //   status: 'fail',
+  //   message: `Can't find ${req.originalUrl} on this server!`
+  // });
+  // next()
+  const err = new Error(`Can't find ${req.originalUrl} on this server!`);
+  err.status = 'fail'
+  err.statusCode = 404;
+  
+  // ! The argument in next function is always treated as error.
+  next(err)
+});
+
+app.use((err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message
   });
+
   next();
 })
 
