@@ -12,8 +12,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     required: [true, 'Enter Your E-mail id'],
     lowercase: true,
-    // ! Error here in validating the email
-    // validate: [validator.isEmail, 'Please Enter A valid E-mail']
+    validate: [validator.isEmail, 'Please Enter A valid E-mail']
   },
   photo: {
     type: String
@@ -34,6 +33,9 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Passwords does not match'
     }
+  },
+  passwordChangedAt: {
+    type: Date
   }
 }, {
   toJSON: { virtuals: true },
@@ -54,8 +56,17 @@ userSchema.methods.correctPassword = async function (candidatePassword, userPass
   return await bcrypt.compare(candidatePassword, userPassword);
 }
 
+userSchema.methods.changesPasswordAfter = function (JWTTimestamp) {
 
-console.log(userSchema.methods)
+  if (this.passwordChangedAt) {
+    const changedTimeStamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    return JWTTimestamp < changedTimeStamp;
+  }
+
+  // false means not changed
+  return false;
+}
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
