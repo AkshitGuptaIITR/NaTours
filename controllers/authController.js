@@ -14,6 +14,20 @@ const signToken = (id) => {
   });
 }
 
+//* Token function
+
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  })
+}
+
 //This is the signup function to create user
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
@@ -24,16 +38,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     // passwordChangedAt: req.body.passwordChangedAt
     role: req.body.role || 'user'
   });
+  createAndSendToken(newUser, 201, res);
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser
-    }
-  })
   next();
 });
 
@@ -55,11 +61,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   //Creating the token
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token: token
-  })
+  createAndSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -155,9 +157,25 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   //login the user and send JWT
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token: token
-  })
+  createAndSendToken(user, 200, res);
+
+});
+
+//* Changing the password while the user is logged in
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  //? Getting the user
+  const user = await User.findById(req.user.id).select('+password');
+
+  //? Check the password 
+  if (!await user.correctPassword(req.body.passwordCurrent, user.password)) {
+    return next(new AppError('Your current password is wrong'), 401);
+  }
+
+  //? Update the password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  //? sending the JWT token
+  createAndSendToken(user, 200, res);
 })
