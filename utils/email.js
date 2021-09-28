@@ -21,7 +21,7 @@ const sendEmail = catchAsync(async options => {
     // html: 
   }
 
-  // Sendin the mail 
+  // Sending the mail 
   transporter.sendMail(mailOptions);
 });
 

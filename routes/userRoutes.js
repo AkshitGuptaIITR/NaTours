@@ -9,9 +9,11 @@ router
 router
   .post('/login', authController.login)
 
+// ! Error in sending the mail from nodemailer
 router
   .post('/forgotpassword', authController.forgotPassword)
 
+// ! resetpassword router not set
 router
   .patch('/resetpassword/:token', authController.resetPassword)
 
