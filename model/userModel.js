@@ -44,7 +44,12 @@ const userSchema = new mongoose.Schema({
     type: Date
   },
   passwordResetToken: String,
-  passwordResetExpires: Date
+  passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false
+  }
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
@@ -59,6 +64,12 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.pre(/^find/, function (next) {
+  // This is the query middleware runs before every query
+  this.find({ active: { $ne: false } });
+  next();
+})
 
 userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
