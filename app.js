@@ -1,5 +1,11 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const morgan = require('morgan');
+const mongoSanatize = require('express-mongo-sanitize')
+const xss = require('xss-clean');
+const hpp = require('hpp');
+
 const dotenv = require('dotenv');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -10,14 +16,55 @@ const globalErrorHandler = require('./controllers/errorController');
 dotenv.config({ path: './config.env' });
 
 const app = express();
+
+// These are the global middlewares
+
+//Security http headers!!
+app.use(helmet());
+
+// Development login 
 console.log(process.env.NODE_ENV)
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-app.use(express.json());
+
+//api limiting from same IP address
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request from this IP, Please try again in an hour'
+});
+
+app.use('/api', limiter);
+
+//Body parsing
+app.use(express.json({
+  limit: '10kb'
+}));
+
+//Data Sanitization againt NoSQL query injection 
+app.use(mongoSanatize());
+
+// Data sanitization against XSS
+app.use(xss())
+
+// Protecting the pollution of parameter
+app.use(hpp({
+  whitelist: [
+    'duration',
+    'ratingsAverage',
+    'ratingsQuantity',
+    'maxGroupSize',
+    'difficulty',
+    'price'
+  ]
+}));
+
+//Serving the Static Files
 app.use(express.static(`${__dirname}/public`));
 
-app.use((req,res,next) => {
+// Test middleware
+app.use((req, res, next) => {
   //This is for testing 
   // console.log(req.headers);
   next()
