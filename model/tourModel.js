@@ -86,7 +86,31 @@ const tourSchema = new mongoose.Schema({
   secretTour: {
     type: Boolean,
     default: false
-  }
+  },
+  startLocation: {
+    //* GeoJSON is the data types for storing goe Station information in mongo
+    type: {
+      type: String,
+      default: 'Point',
+      enum: ['Point']
+    },
+    coordinates: [Number],
+    address: String,
+    description: String
+  },
+  locations: [
+    {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: 'Point'
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+      day: Number
+    }
+  ]
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
