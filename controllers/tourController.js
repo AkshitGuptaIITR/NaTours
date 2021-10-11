@@ -2,6 +2,7 @@ const Tour = require("../model/tourModel");
 const APIfeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const factory = require('./handlerFactory');
 
 // * ! This is the miidle ware to set 5 cheap and good tours
 
@@ -33,63 +34,24 @@ exports.getTours = catchAsync(async (req, res, next) => {
   })
 });
 
+exports.createTour = factory.createOne(Tour)
+exports.updateTour = factory.updateOne(Tour)
 
+// exports.deleteTour = catchAsync(async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
 
-exports.createTour = catchAsync(async (req, res, next) => {
-  // * This is the another way of doing the save of the object
-  const newTour = await Tour.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: newTour
-    }
-  })
-  // try {
+//   if (!tour) {
+//     return next(new AppError('No tour found with this id', 404))
+//   }
 
-  // } catch (err) {
-  //   res.status(400).json({
-  //     status: 'fail',
-  //     message: err
-  //   })
-  // }
-  //This is the one way to do
+//   res.status(204).json({
+//     status: 'success',
+//     data: null
+//   });
+// })
 
-  // const newTour = new Tour({});
-  // newTour.save();
-});
-
-exports.updateTour = catchAsync(async (req, res, next) => {
-  //The Logic is not completed
-  const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
-  if (!tour) {
-    return next(new AppError('No tour found with this id', 404))
-  }
-
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: updatedTour
-    }
-  })
-
-})
-
-exports.deleteTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
-
-  if (!tour) {
-    return next(new AppError('No tour found with this id', 404))
-  }
-
-  res.status(204).json({
-    status: 'success',
-    data: null
-  });
-})
+//* Making the code reusable with the factory handler
+exports.deleteTour = factory.deleteOne(Tour);
 
 exports.searchTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.id)

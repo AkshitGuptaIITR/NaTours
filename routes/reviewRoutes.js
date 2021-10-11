@@ -5,7 +5,12 @@ const reviewController = require('../controllers/reviewController');
 
 router
   .route('/')
-  .post(authController.protect, authController.restrictTo('user'), reviewController.createReview)
+  .post(authController.protect, authController.restrictTo('user'), reviewController.setToursAndUserIds, reviewController.createReview)
   .get(reviewController.getAllReview);
+
+router.
+  route('/:id')
+  .patch(reviewController.updateReview)
+  .delete(reviewController.deleteReview)
 
 module.exports = router;

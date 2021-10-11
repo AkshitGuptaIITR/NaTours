@@ -1,6 +1,7 @@
 const User = require('../model/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const factory = require('./handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObject = {};
@@ -59,29 +60,6 @@ exports.getUser = (req, res) => {
   })
 };
 
-exports.updateUser = (req, res) => {
-  res.status(200).json({
-    status: 'sucess',
-    data: {
-      message: 'Not set Up right now'
-    }
-  })
-};
-
-exports.deleteUser = (req, res) => {
-  res.status(200).json({
-    status: 'sucess',
-    data: {
-      message: 'Not set Up right now'
-    }
-  })
-};
-
-exports.createUser = (req, res) => {
-  res.status(200).json({
-    status: 'sucess',
-    data: {
-      message: 'Not set Up right now'
-    }
-  })
-};
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
+exports.createUser = factory.createOne(User)

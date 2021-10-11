@@ -11,7 +11,6 @@ const reviewSchema = new mongoose.Schema({
     type: Number,
     min: 1,
     max: 5,
-    // required: [true, 'Rating cannot be empty']
   },
   createdAt: {
     type: Date,
